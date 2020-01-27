@@ -9,6 +9,7 @@ from google.auth.transport.requests import Request
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
+
 def main():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
@@ -47,12 +48,14 @@ def main():
 
     events = events_result.get('items', [])
 
+    print('Your next shift starts on ')
     today = events[0]
 
-    start_time = today['start'].get('dateTime')
+    start_time = parse_date(today['start'].get('dateTime'))
 
-    print('Start: ', start_time)
-    print('End: ', today['end'].get('dateTime'))
+    print(start_time.time)
+
+    #2020-01-25T14:15:00-08:00
 
 
     # if not events:
@@ -63,6 +66,11 @@ def main():
     #     start = event['start'].get('dateTime', event['start'].get('date'))
     #     end = event['end'].get('dateTime')
     #     print(start, end)
+
+
+# Converts and ISO 8601 string to datetime object
+def parse_date(d):
+    return datetime.datetime.strptime(d, '%Y-%m-%dT%H:%M:%S%z')
 
 if __name__ == '__main__':
     main()
