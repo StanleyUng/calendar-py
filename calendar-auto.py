@@ -5,10 +5,12 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from shift import Shift
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
+calendar_type = ['primary', '']
 
 def main():
     """Shows basic usage of the Google Calendar API.
@@ -35,42 +37,55 @@ def main():
 
     service = build('calendar', 'v3', credentials=creds)
 
-#==================================================================================================
-
     # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
 
     print('Getting the upcoming shifts in your work schedule')
     events_result = service.events().list(
-        calendarId='bf6eke2pd9t325gpqp8j49bp1k@group.calendar.google.com', 
+        calendarId='primary', 
         timeMin=now,
         maxResults=14).execute()
 
-    events = events_result.get('items', [])
+    print('What would you like to do \n', '1) Check my schedule\n', '2) Check my reminders\n', '3) How much am I getting paid next period\n')
 
-    print('Your next shift starts on ')
-    today = events[0]
+    shifts = events_result.get('items', [])
 
-    start_time = parse_date(today['start'].get('dateTime'))
+    schedule = []
 
-    print(start_time.time)
+    if not shifts:
+        print('No upcoming shifts')
+    for shift in shifts:
+        start_time = parse_date(shift['start'].get('dateTime'))
+        end_time = parse_date(shift['end'].get('dateTime'))
 
-    #2020-01-25T14:15:00-08:00
+        day = datetime.date(start_time.year, start_time.month, start_time.day)
+        time_in = datetime.time(start_time.hour, start_time.minute, start_time.second)
+        time_out = datetime.time(end_time.hour, end_time.minute, end_time.second)
 
+        s = Shift(day, time_in, time_out)
+        schedule.append(s)
 
-    # if not events:
-    #     print('No upcoming events found.')
-    # for event in events:
-    #     start = event['start'].get('date', event['start'].get('date'))
-    #     print(start)
-    #     start = event['start'].get('dateTime', event['start'].get('date'))
-    #     end = event['end'].get('dateTime')
-    #     print(start, end)
+        print(s.get_shift())
+        print(s.get_hours())
+        print(s.calculate_pay())
 
+# HELPER FUNCTIONS ================================================================================
 
 # Converts and ISO 8601 string to datetime object
+# '%Y-%m-%dT%H:%M:%S%z'
+# 2020-01-25T14:15:00-08:00
 def parse_date(d):
     return datetime.datetime.strptime(d, '%Y-%m-%dT%H:%M:%S%z')
 
+
+
+
+
 if __name__ == '__main__':
     main()
+
+# Script Notes
+# Things to add
+# -- sum all the hours of a week for total number of hours taking into account lunches
+# -- sum all hours for a specific pay period
+# -- calculate my paycheck
