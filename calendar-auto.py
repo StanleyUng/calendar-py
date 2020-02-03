@@ -8,9 +8,14 @@ from google.auth.transport.requests import Request
 from shift import Shift
 
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar/readonly']
 
-calendar_type = ['primary', '']
+calendar_type = {
+    'main': 'primary',
+    'target': '   '
+}
+
+MAX_RESULTS = 14
 
 def main():
     """Shows basic usage of the Google Calendar API.
@@ -40,13 +45,12 @@ def main():
     # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
 
+#==================================================================================================
     print('Getting the upcoming shifts in your work schedule')
     events_result = service.events().list(
-        calendarId='primary', 
+        calendarId=calendar_type['target'], 
         timeMin=now,
-        maxResults=14).execute()
-
-    print('What would you like to do \n', '1) Check my schedule\n', '2) Check my reminders\n', '3) How much am I getting paid next period\n')
+        maxResults=MAX_RESULTS).execute()
 
     shifts = events_result.get('items', [])
 
@@ -65,11 +69,9 @@ def main():
         s = Shift(day, time_in, time_out)
         schedule.append(s)
 
-        print(s.get_shift())
-        print(s.get_hours())
-        print(s.calculate_pay())
-
-# HELPER FUNCTIONS ================================================================================
+        print(s.get_shift(), s.get_hours())
+        # print(s.calculate_pay())
+#==================================================================================================
 
 # Converts and ISO 8601 string to datetime object
 # '%Y-%m-%dT%H:%M:%S%z'
@@ -77,15 +79,5 @@ def main():
 def parse_date(d):
     return datetime.datetime.strptime(d, '%Y-%m-%dT%H:%M:%S%z')
 
-
-
-
-
 if __name__ == '__main__':
     main()
-
-# Script Notes
-# Things to add
-# -- sum all the hours of a week for total number of hours taking into account lunches
-# -- sum all hours for a specific pay period
-# -- calculate my paycheck

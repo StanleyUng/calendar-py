@@ -1,2 +1,5 @@
 # calendar-script
-Python script to do a variety of thing on Google Calendar
+
+
+Python script to do a variety of things on Google Calendar
+
